@@ -17,9 +17,6 @@ namespace MangoPay.SDK.Entities.GET
         /// (amount received on wallet).</summary>
         public Money DebitedFunds { get; set; }
 
-        /// <summary>Fees.</summary>
-        public Money Fees { get; set; }
-
         /// <summary>Status of the PreAuthorization.</summary>
         [JsonConverter(typeof(StringEnumConverter))]
         public PreAuthorizationStatus Status { get; set; }
