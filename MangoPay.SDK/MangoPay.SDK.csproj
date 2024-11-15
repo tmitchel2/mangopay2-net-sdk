@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFrameworks>net9.0</TargetFrameworks>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
         <Company>MangoPay</Company>
         <Copyright>Copyright © 2022</Copyright>
         <Description>.Net 6.0 for access to MANGOPAY API v2</Description>
