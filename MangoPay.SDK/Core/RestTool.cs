@@ -13,7 +13,9 @@ namespace MangoPay.SDK.Core
     {
         private static RestSharpDto _instance = null;
 
+#pragma warning disable IDE0044 // Add readonly modifier
         private static object _lock = new object();
+#pragma warning restore IDE0044 // Add readonly modifier
 
         private readonly RestClientOptions _options;
 
@@ -75,7 +77,9 @@ namespace MangoPay.SDK.Core
         private int _responseCode;
 
         // pagination object
+#pragma warning disable IDE0052 // Remove unread private members
         private Pagination _pagination;
+#pragma warning restore IDE0052 // Remove unread private members
 
         // logger object
         private readonly ILog _log;
@@ -95,7 +99,9 @@ namespace MangoPay.SDK.Core
             this._authRequired = authRequired;
             LogManager.Adapter = this._root.Config.LoggerFactoryAdapter;
             this._log = LogManager.GetLogger(this._root.Config.LoggerFactoryAdapter.GetType());
+#pragma warning disable SYSLIB0014 // Type or member is obsolete
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+#pragma warning restore SYSLIB0014 // Type or member is obsolete
             _urlTool = new UrlTool(_root);
             _dto = RestSharpDto.GetInstance(_urlTool.GetBaseUrl(), _root.Config.Timeout > 0 ? _root.Config.Timeout : _timeout);
         }
