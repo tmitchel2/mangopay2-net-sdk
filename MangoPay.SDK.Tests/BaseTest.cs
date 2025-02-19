@@ -1,4 +1,9 @@
-﻿using Common.Logging.Simple;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
 using MangoPay.SDK.Core;
 using MangoPay.SDK.Core.Enumerations;
 using MangoPay.SDK.Entities;
@@ -7,12 +12,6 @@ using MangoPay.SDK.Entities.POST;
 using MangoPay.SDK.Entities.PUT;
 using NUnit.Framework;
 using RestSharp;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
 
 namespace MangoPay.SDK.Tests
 {
@@ -27,6 +26,7 @@ namespace MangoPay.SDK.Tests
         private static BankAccountIbanDTO _johnsAccount;
         private static WalletDTO _johnsWallet;
         private static WalletDTO _johnsWalletWithMoney;
+        private static VirtualAccountDTO _johnsVirtualAccount;
         private static PayInCardWebDTO _johnsPayInCardWeb;
         private static PayOutBankWireDTO _johnsPayOutBankWire;
         private static CardRegistrationDTO _johnsCardRegistration;
@@ -214,7 +214,13 @@ namespace MangoPay.SDK.Tests
 
             return BaseTest._johnsWallet;
         }
-
+        
+        protected async Task<WalletDTO> GetNewWallet(CurrencyIso currencyIso)
+        {
+            var john = await this.GetJohn();
+            var wallet = new WalletPostDTO(new List<string> { john.Id }, $"Wallet in {currencyIso.ToString()}", currencyIso);
+            return await this.Api.Wallets.CreateAsync(wallet);
+        }
 
         protected async Task<WalletDTO> CreateJohnsWallet()
         {
@@ -229,7 +235,7 @@ namespace MangoPay.SDK.Tests
         /// <returns>Wallet instance loaded with 10k EUR.</returns>
         protected async Task<WalletDTO> GetJohnsWalletWithMoney()
         {
-            return await GetJohnsWalletWithMoney(100);
+            return await GetJohnsWalletWithMoney(200);
         }
 
         /// <summary>Creates wallet for John, if not created yet, or returns an existing one.</summary>
@@ -322,6 +328,22 @@ namespace MangoPay.SDK.Tests
             var createdWallet = await this.Api.Wallets.GetAsync(johnsWalletWithMoney.Id);
 
             return new Tuple<string, WalletDTO>(card.Id, createdWallet);
+        }
+
+        protected async Task<VirtualAccountDTO> GetJohnsVirtualAccount()
+        {
+            if (_johnsVirtualAccount != null) return _johnsVirtualAccount;
+            
+            var wallet = await GetJohnsWallet();
+            var virtualAccount = new VirtualAccountPostDTO
+            {
+                Country = "FR",
+                VirtualAccountPurpose = "Collection",
+                Tag = "create virtual account tag"
+            };
+            _johnsVirtualAccount = await Api.VirtualAccounts.CreateAsync(wallet.Id, virtualAccount);
+
+            return _johnsVirtualAccount;
         }
 
         protected async Task<PayInCardWebDTO> GetJohnsPayInCardWeb()
@@ -423,6 +445,49 @@ namespace MangoPay.SDK.Tests
             PayInKlarnaWebPostDTO payIn = await GetPayInKlarnaWebPost();
             return await this.Api.PayIns.CreateKlarnaWebAsync(payIn);
         }
+        
+        protected async Task<PayInIdealWebDTO> GetNewPayInIdealWeb()
+        {
+            PayInIdealWebPostDTO payIn = await GetPayInIdealWebPost();
+            return await this.Api.PayIns.CreateIdealWebAsync(payIn);
+        }
+        
+        protected async Task<PayInGiropayWebDTO> GetNewPayInGiropayWeb()
+        {
+            PayInGiropayWebPostDTO payIn = await GetPayInGiropayWebPost();
+            return await this.Api.PayIns.CreateGiropayWebAsync(payIn);
+        }
+        
+        protected async Task<PayInSwishWebDTO> GetNewPayInSwishWeb()
+        {
+            PayInSwishWebPostDTO payIn = await GetPayInSwishWebPost();
+            return await this.Api.PayIns.CreateSwishWebAsync(payIn);
+        }
+        
+        protected async Task<PayInBancontactWebDTO> GetNewPayInBancontactWeb()
+        {
+            PayInBancontactWebPostDTO payIn = await GetPayInBancontactWebPost();
+            return await this.Api.PayIns.CreateBancontactWebAsync(payIn);
+        }
+        
+        protected async Task<PayInCardWebDTO> CreateLegacyIdealPayInCardWeb(string walletId)
+        {
+            var user = await this.GetJohn();
+
+            var payIn = new PayInCardWebPostDTO(
+                user.Id, 
+                new Money { Amount = 1000, Currency = CurrencyIso.EUR }, 
+                new Money { Amount = 0, Currency = CurrencyIso.EUR },
+                walletId, 
+                "https://test.com", 
+                CultureCode.FR, 
+                CardType.IDEAL,
+                bic: "REVOLT21"
+                );
+
+            return await this.Api.PayIns.CreateCardWebAsync(payIn);
+        }
+
 
         /// <summary>Creates PayIn Card Direct object.</summary>
         /// <param name="userId">User identifier.</param>
@@ -456,6 +521,8 @@ namespace MangoPay.SDK.Tests
 
             var payIn = await GetPayInCardDirectPost(userId, idempotencyKey);
             payIn.Billing = billing;
+
+            payIn.PaymentCategory = "ECommerce";
 
             return await this.Api.PayIns.CreateCardDirectAsync(payIn);
         }
@@ -710,6 +777,82 @@ namespace MangoPay.SDK.Tests
 
             return payIn;
         }
+        
+        
+        protected async Task<PayInIdealWebPostDTO> GetPayInIdealWebPost()
+        {
+            var wallet = await GetJohnsWalletWithMoney();
+            var user = await GetJohn();
+
+            var payIn = new PayInIdealWebPostDTO(
+                user.Id,
+                new Money { Amount = 100, Currency = CurrencyIso.EUR },
+                new Money { Amount = 20, Currency = CurrencyIso.EUR },
+                wallet.Id,
+                "http://www.my-site.com/returnURL?transactionId=wt_71a08458-b0cc-468d-98f7-1302591fc238",
+                "RBRBNL21",
+                "Ideal tag",
+                "Ideal test"
+            );
+
+            return payIn;
+        }
+        
+        protected async Task<PayInGiropayWebPostDTO> GetPayInGiropayWebPost()
+        {
+            var wallet = await GetJohnsWalletWithMoney();
+            var user = await GetJohn();
+
+            var payIn = new PayInGiropayWebPostDTO(
+                user.Id,
+                new Money { Amount = 100, Currency = CurrencyIso.EUR },
+                new Money { Amount = 20, Currency = CurrencyIso.EUR },
+                wallet.Id,
+                "http://www.my-site.com/returnURL?transactionId=wt_71a08458-b0cc-468d-98f7-1302591fc238",
+                "Giropay tag",
+                "test"
+                
+            );
+
+            return payIn;
+        }
+        
+        protected async Task<PayInSwishWebPostDTO> GetPayInSwishWebPost()
+        {
+            var wallet = await GetNewWallet(CurrencyIso.SEK);
+            var user = await GetJohn();
+
+            var payIn = new PayInSwishWebPostDTO(
+                user.Id,
+                new Money { Amount = 100, Currency = CurrencyIso.SEK },
+                new Money { Amount = 0, Currency = CurrencyIso.SEK },
+                wallet.Id,
+                "http://www.my-site.com/returnURL?transactionId=wt_71a08458-b0cc-468d-98f7-1302591fc238"
+            );
+
+            return payIn;
+        }
+        
+        protected async Task<PayInBancontactWebPostDTO> GetPayInBancontactWebPost()
+        {
+            var wallet = await GetJohnsWalletWithMoney();
+            var user = await GetJohn();
+
+            var payIn = new PayInBancontactWebPostDTO(
+                user.Id,
+                new Money { Amount = 100, Currency = CurrencyIso.EUR },
+                new Money { Amount = 20, Currency = CurrencyIso.EUR },
+                wallet.Id,
+                "http://www.my-site.com/returnURL?transactionId=wt_71a08458-b0cc-468d-98f7-1302591fc238",
+                null,
+                null,
+                false,
+                CultureCode.NL,
+                PaymentFlow.APP
+            );
+
+            return payIn;
+        }
 
         protected async Task<PayOutBankWireDTO> GetJohnsPayOutBankWire()
         {
@@ -777,7 +920,7 @@ namespace MangoPay.SDK.Tests
             var walletPost = new WalletPostDTO(new List<string> { user.Id }, "WALLET IN EUR FOR TRANSFER", CurrencyIso.EUR);
             var wallet = await this.Api.Wallets.CreateAsync(walletPost);
 
-            var transfer = new TransferPostDTO(user.Id, user.Id, new Money { Amount = 100, Currency = CurrencyIso.EUR }, new Money { Amount = 0, Currency = CurrencyIso.EUR }, walletWithMoney.Id, wallet.Id)
+            var transfer = new TransferPostDTO(user.Id, null, new Money { Amount = 100, Currency = CurrencyIso.EUR }, new Money { Amount = 0, Currency = CurrencyIso.EUR }, walletWithMoney.Id, wallet.Id)
                 {
                     Tag = "DefaultTag"
                 };
@@ -791,9 +934,41 @@ namespace MangoPay.SDK.Tests
         protected async Task<RefundDTO> GetNewRefundForTransfer(TransferDTO transfer)
         {
             var user = await this.GetJohn();
+            var debitedFunds = new Money
+            {
+                Amount = transfer.DebitedFunds.Amount,
+                Currency = transfer.DebitedFunds.Currency
+            };
+            var fees = new Money
+            {
+                Amount = transfer.Fees.Amount,
+                Currency = transfer.Fees.Currency
+            };
 
-            var refund = new RefundTransferPostDTO(user.Id);
+            var refund = new RefundTransferPostDTO(user.Id, fees, debitedFunds);
 
+            return await this.Api.Transfers.CreateRefundAsync(transfer.Id, refund);
+        }
+
+        /// <summary>Creates partial refund object for Tranfert.</summary>
+        /// <param name="transfer">Tranfert entity.</param>
+        /// <returns>Refund instance returned from API.</returns>
+        protected async Task<RefundDTO> GetPartialRefundForPayIn(TransferDTO transfer)
+        {
+            var user = await this.GetJohn();
+
+            var debitedFunds = new Money
+            {
+                Amount = 100,
+                Currency = transfer.DebitedFunds.Currency
+            };
+            var fees = new Money
+            {
+                Amount = 10,
+                Currency = transfer.Fees.Currency
+            };
+
+            var refund = new RefundTransferPostDTO(user.Id, fees, debitedFunds);
             return await this.Api.Transfers.CreateRefundAsync(transfer.Id, refund);
         }
 
@@ -812,6 +987,28 @@ namespace MangoPay.SDK.Tests
             var fees = new Money
             {
                 Amount = payIn.Fees.Amount,
+                Currency = payIn.Fees.Currency
+            };
+
+            var refund = new RefundPayInPostDTO(user.Id, fees, debitedFunds);
+            return await this.Api.PayIns.CreateRefundAsync(payIn.Id, refund, idempotentKey: idempotencyKey);
+        }
+        
+        /// <summary>Creates partial refund object for PayIn.</summary>
+        /// <param name="payIn">PayIn entity.</param>
+        /// <returns>Refund instance returned from API.</returns>
+        protected async Task<RefundDTO> GetPartialRefundForPayIn(PayInDTO payIn, string idempotencyKey = null)
+        {
+            var user = await this.GetJohn();
+
+            var debitedFunds = new Money
+            {
+                Amount = 100,
+                Currency = payIn.DebitedFunds.Currency
+            };
+            var fees = new Money
+            {
+                Amount = 10,
                 Currency = payIn.Fees.Currency
             };
 
@@ -906,37 +1103,8 @@ namespace MangoPay.SDK.Tests
             };
             request.AddParameter("data", cardRegistration.PreregistrationData);
             request.AddParameter("accessKeyRef", cardRegistration.AccessKey);
-            request.AddParameter("cardNumber",  "4970105191923460");
-            request.AddParameter("cardExpirationDate", "1224");
-            request.AddParameter("cardCvx", "123");
-
-            // Payline requires TLS
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-
-            var response = await client.ExecuteAsync(request);
-
-            var responseString = response.Content;
-
-            if (response.StatusCode == HttpStatusCode.OK)
-                return responseString;
-            
-            throw new Exception(responseString);
-        }
-        
-        /// <param name="cardRegistration">CardRegistration instance.</param>
-        /// <returns>Registration data.</returns>
-        protected async Task<string> GetPaylineCorrectRegistartionDataForDeposit(CardRegistrationDTO cardRegistration)
-        {
-            var client = new RestClient(cardRegistration.CardRegistrationURL);
-
-            var request = new RestRequest
-            {
-                Method = Method.Post
-            };
-            request.AddParameter("data", cardRegistration.PreregistrationData);
-            request.AddParameter("accessKeyRef", cardRegistration.AccessKey);
-            request.AddParameter("cardNumber",  "4970105181818183");
-            request.AddParameter("cardExpirationDate", "1224");
+            request.AddParameter("cardNumber",  "4970107111111119");
+            request.AddParameter("cardExpirationDate", "1229");
             request.AddParameter("cardCvx", "123");
 
             // Payline requires TLS
@@ -963,7 +1131,7 @@ namespace MangoPay.SDK.Tests
 
             var cardRegistration = await this.Api.CardRegistrations.CreateAsync(cardRegistrationPostDto);
             var cardRegistrationPut = new CardRegistrationPutDTO();
-            var registrationData = await this.GetPaylineCorrectRegistartionDataForDeposit(cardRegistration);
+            var registrationData = await this.GetPaylineCorrectRegistartionData(cardRegistration);
             cardRegistrationPut.RegistrationData = registrationData;
             cardRegistrationPut.Tag = "DefaultTag - Updated";
 

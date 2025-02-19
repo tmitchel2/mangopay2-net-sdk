@@ -14,11 +14,14 @@ namespace MangoPay.SDK.Entities.POST
             AuthorId = authorId;
         }
 
-        public RefundPayInPostDTO(string authorId, Money fees, Money debitedFunds)
+        public RefundPayInPostDTO(string authorId, Money fees, Money debitedFunds, string reference = null,
+            string statementDescriptor = null)
         {
             AuthorId = authorId;
             Fees = fees;
             DebitedFunds = debitedFunds;
+            Reference = reference;
+            StatementDescriptor = statementDescriptor;
         }
 
         /// <summary>Author identifier.</summary>
@@ -29,5 +32,13 @@ namespace MangoPay.SDK.Entities.POST
 
         /// <summary>Fees.</summary>
         public Money Fees { get; set; }
+        
+        public string Reference { get; set; }
+        
+        /// <summary>
+        /// Custom description to appear on the user’s bank statement along with the platform name.
+        /// Note that a particular bank may show more or less information.
+        /// </summary>
+        public string StatementDescriptor { get; set; }
     }
 }

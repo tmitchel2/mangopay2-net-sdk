@@ -25,5 +25,25 @@ namespace MangoPay.SDK.Entities.GET
         ///<summary> Shipping preference
         [JsonConverter(typeof(StringEnumConverter))]
         public ShippingPreference? ShippingPreference { get; set; }
+        
+        public string Reference { get; set; }
+        
+        public string CancelURL { get; set; }
+        
+        public string PaypalPayerID { get; set; }
+        
+        public string BuyerCountry { get; set; }
+        
+        public string BuyerFirstname { get; set; }
+        
+        public string BuyerLastname { get; set; }
+        
+        public string BuyerPhone { get; set; }
+        
+        public string PaypalOrderID { get; set; }
+        
+        public string PaypalBuyerAccountEmail { get; set; }
+        
+        public List<PayPalTrackingInformation> Trackings { get; set; }
     }
 }

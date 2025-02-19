@@ -38,5 +38,14 @@ namespace MangoPay.SDK.Entities.GET
         /// → Is mandatory when the flag “Use 3DSV2 Scenario” is active for (FORCE/DEFAULT/FRICTIONLESS both 3)
         /// </summary>
         public string IpAddress { get; set; }
+        
+        public CardInfo CardInfo { get; set; }
+        
+        /// <summary>
+        /// The channel through which the user provided their card details, used to indicate mail-order and telephone-order (MOTO) payments:
+        /// ECommerce – Payment received online.
+        /// TelephoneOrder – Payment received via mail order or telephone order (MOTO).
+        /// </summary>
+        public string PaymentCategory { get; set; }
     }
 }

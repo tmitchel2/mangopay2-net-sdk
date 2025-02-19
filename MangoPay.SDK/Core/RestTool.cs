@@ -1,11 +1,11 @@
-﻿using Common.Logging;
-using MangoPay.SDK.Entities;
-using RestSharp;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Common.Logging;
+using MangoPay.SDK.Entities;
+using RestSharp;
 
 namespace MangoPay.SDK.Core
 {
@@ -19,15 +19,16 @@ namespace MangoPay.SDK.Core
 
         public RestClient Client { get; }
 
+        // options need timout in milliseconds
         private RestSharpDto(string url, int timeout)
         {
             _options = new RestClientOptions(url)
             {
                 ThrowOnAnyError = false,
-                Timeout = TimeSpan.FromMilliseconds(timeout)
+                Timeout = new TimeSpan(0, 0, 0, 0, timeout) 
             };
 
-            Client = new RestClient(_options, null, s => s.UseSerializer<MangoPaySerializer>());
+            Client = new RestClient(_options, configureSerialization: s => s.UseSerializer(() => new MangoPaySerializer()));
         }
 
         public static RestSharpDto GetInstance(string url, int timeout)
@@ -135,11 +136,11 @@ namespace MangoPay.SDK.Core
                 case 401:
                     throw new UnauthorizedAccessException(restResponse.Content);
             }
-
+            
             if (restResponse.ResponseStatus == ResponseStatus.TimedOut)
                 throw new TimeoutException(restResponse.ErrorMessage);
 
-            if (restResponse.ErrorException is System.Net.ProtocolViolationException)
+            if (restResponse.ErrorException is ProtocolViolationException)
                 throw restResponse.ErrorException;
 
             throw new ResponseException(restResponse.Content, responseCode);
@@ -158,7 +159,7 @@ namespace MangoPay.SDK.Core
         /// <param name="entity">Instance of DTO class that is going to be sent in case of PUTting or POSTing.</param>
         /// <param name="idempotentKey">Idempotent key for this request.</param>
         /// <returns>The DTO instance returned from API.</returns>
-        public async Task<U> RequestAsync<U, T>(ApiEndPoint endPoint, Dictionary<string, string> requestData,
+        public async Task<U> RequestAsync<U, T>(ApiEndPoint endPoint, Dictionary<string, string> requestData, 
             T entity = default, Pagination pagination = null, Dictionary<string, string> additionalUrlParams = null, string idempotentKey = null)
             where U : new()
         {
@@ -182,7 +183,7 @@ namespace MangoPay.SDK.Core
         /// <param name="pagination">Pagination object.</param>
         /// <param name="additionalUrlParams"></param>
         /// <returns>Collection of DTO instances returned from API.</returns>
-        public async Task<ListPaginated<T>> RequestListAsync<T>(ApiEndPoint endPoint, Dictionary<string, string> requestData,
+        public async Task<ListPaginated<T>> RequestListAsync<T>(ApiEndPoint endPoint, Dictionary<string, string> requestData, 
             Dictionary<string, string> additionalUrlParams, Pagination pagination = null, string idempotentKey = null)
             where T : new()
         {
@@ -199,7 +200,7 @@ namespace MangoPay.SDK.Core
             where U : new()
         {
             var restUrl = _urlTool.GetRestUrl(urlMethod, this._authRequired && this._includeClientId, pagination, additionalUrlParams, _root.Config.ApiVersion);
-
+            
             _log.Debug("FullUrl: " + _urlTool.GetFullUrl(restUrl));
 
             var restRequest = new RestRequest(restUrl)
@@ -272,7 +273,7 @@ namespace MangoPay.SDK.Core
 
             if (this._responseCode == 200)
             {
-                _log.Debug("Response object: " + responseObject.ToString());
+                _log.Debug("Response object: " + responseObject);
             }
 
             SetLastRequestInfo(restRequest, restResponse);
@@ -285,7 +286,7 @@ namespace MangoPay.SDK.Core
         private void SetLastRequestInfo(RestRequest request, RestResponse response)
         {
             _root.LastRequestInfo = new LastRequestInfo() { Request = request, Response = response };
-
+            
             string GetHeaderValue(string key)
             {
                 return response?.Headers?
@@ -297,6 +298,7 @@ namespace MangoPay.SDK.Core
             _root.LastRequestInfo.RateLimitingCallsAllowed = GetHeaderValue("X-RateLimit-Limit");
             _root.LastRequestInfo.RateLimitingCallsRemaining = GetHeaderValue("X-RateLimit-Remaining");
             _root.LastRequestInfo.RateLimitingTimeTillReset = GetHeaderValue("X-RateLimit-Reset");
+            _root.LastRequestInfo.RateLimitingCallsMade = GetHeaderValue("X-RateLimit");
         }
 
         private async Task<ListPaginated<T>> DoRequestListAsync<T>(string urlMethod, Dictionary<string, string> additionalUrlParams = null,
@@ -410,7 +412,7 @@ namespace MangoPay.SDK.Core
         private List<string> CustomSplit(string input, char delim)
         {
             var list = new List<string>();
-            var pos = new List<int> { 0 };
+            var pos = new List<int> {0};
 
             for (var i = 0; i < input.Length; i++)
             {
@@ -550,6 +552,11 @@ namespace MangoPay.SDK.Core
                 // User agent header
                 { Constants.USER_AGENT, $"MangoPay V2 SDK .NET {_root.GetVersion()}" }
             };
+
+            if (_root.Config.UKHeaderFlag)
+            {
+                httpHeaders.Add(Constants.TENANT_ID, "uk");
+            }
 
             // AuthenticationHelper http header
             if (!this._authRequired) return httpHeaders;
