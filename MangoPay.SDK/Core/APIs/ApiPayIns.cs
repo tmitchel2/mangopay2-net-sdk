@@ -1,9 +1,9 @@
-﻿using MangoPay.SDK.Core.Enumerations;
+﻿using System;
+using System.Threading.Tasks;
+using MangoPay.SDK.Core.Enumerations;
+using MangoPay.SDK.Entities;
 using MangoPay.SDK.Entities.GET;
 using MangoPay.SDK.Entities.POST;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using MangoPay.SDK.Entities.PUT;
 
 namespace MangoPay.SDK.Core.APIs
@@ -151,6 +151,48 @@ namespace MangoPay.SDK.Core.APIs
             return await this.CreateObjectAsync<PayInKlarnaWebDTO, PayInKlarnaWebPostDTO>(
                 MethodKey.PayinsKlarnaWebCreate, payIn, idempotentKey);
         }
+        
+        /// <summary>Creates new payin ideal web.</summary>
+        /// <param name="idempotentKey">Idempotent key for this request.</param>
+        /// <param name="payIn">Object instance to be created.</param>
+        /// <returns>Object instance returned from API.</returns>
+        public async Task<PayInIdealWebDTO> CreateIdealWebAsync(PayInIdealWebPostDTO payIn,
+            string idempotentKey = null)
+        {
+            return await this.CreateObjectAsync<PayInIdealWebDTO, PayInIdealWebPostDTO>(
+                MethodKey.PayinsIdealWebCreate, payIn, idempotentKey);
+        }
+        
+        /// <summary>Creates new payin giropay web.</summary>
+        /// <param name="idempotentKey">Idempotent key for this request.</param>
+        /// <param name="payIn">Object instance to be created.</param>
+        /// <returns>Object instance returned from API.</returns>
+        public async Task<PayInGiropayWebDTO> CreateGiropayWebAsync(PayInGiropayWebPostDTO payIn,
+            string idempotentKey = null)
+        {
+            return await this.CreateObjectAsync<PayInGiropayWebDTO, PayInGiropayWebPostDTO>(
+                MethodKey.PayinsGiropayWebCreate, payIn, idempotentKey);
+        }
+        
+        /// <summary>Creates new payin Swish web.</summary>
+        /// <param name="idempotentKey">Idempotent key for this request.</param>
+        /// <param name="payIn">Object instance to be created.</param>
+        /// <returns>Object instance returned from API.</returns>
+        public async Task<PayInSwishWebDTO> CreateSwishWebAsync(PayInSwishWebPostDTO payIn,
+            string idempotentKey = null)
+        {
+            return await this.CreateObjectAsync<PayInSwishWebDTO, PayInSwishWebPostDTO>(
+                MethodKey.PayinsSwishWebCreate, payIn, idempotentKey);
+        }
+        
+        /// <summary>Creates new payin bancontact web.</summary>
+        /// <param name="idempotentKey">Idempotent key for this request.</param>
+        /// <param name="payIn">Object instance to be created.</param>
+        /// <returns>Object instance returned from API.</returns>
+        public async Task<PayInBancontactWebDTO> CreateBancontactWebAsync(PayInBancontactWebPostDTO payIn, string idempotentKey = null)
+        {
+            return await this.CreateObjectAsync<PayInBancontactWebDTO, PayInBancontactWebPostDTO>(MethodKey.PayinsBancontactWebCreate, payIn, idempotentKey);
+        }
 
         /// <summary>Gets PayIn entity by its identifier.</summary>
         /// <param name="payInId">PayIn identifier.</param>
@@ -288,6 +330,38 @@ namespace MangoPay.SDK.Core.APIs
         {
             return await this.GetObjectAsync<PayInKlarnaWebDTO>(MethodKey.PayinsGet, entitiesId: payInId);
         }
+        
+        /// <summary>Gets PayIn Ideal entity by its identifier.</summary>
+        /// <param name="payInId">PayIn identifier.</param>
+        /// <returns>PayIn object returned from API.</returns>
+        public async Task<PayInIdealWebDTO> GetIdealAsync(string payInId)
+        {
+            return await this.GetObjectAsync<PayInIdealWebDTO>(MethodKey.PayinsGet, entitiesId: payInId);
+        }
+        
+        /// <summary>Gets PayIn Giropay entity by its identifier.</summary>
+        /// <param name="payInId">PayIn identifier.</param>
+        /// <returns>PayIn object returned from API.</returns>
+        public async Task<PayInGiropayWebDTO> GetGiropayAsync(string payInId)
+        {
+            return await this.GetObjectAsync<PayInGiropayWebDTO>(MethodKey.PayinsGet, entitiesId: payInId);
+        }
+        
+        /// <summary>Gets PayIn Swish entity by its identifier.</summary>
+        /// <param name="payInId">PayIn identifier.</param>
+        /// <returns>PayIn object returned from API.</returns>
+        public async Task<PayInSwishWebDTO> GetSwishAsync(string payInId)
+        {
+            return await this.GetObjectAsync<PayInSwishWebDTO>(MethodKey.PayinsGet, entitiesId: payInId);
+        }
+        
+        /// <summary>Gets PayIn Bancontact entity by its identifier.</summary>
+        /// <param name="payInId">PayIn identifier.</param>
+        /// <returns>PayIn object returned from API.</returns>
+        public async Task<PayInBancontactWebDTO> GetBancontactAsync(string payInId)
+        {
+            return await this.GetObjectAsync<PayInBancontactWebDTO>(MethodKey.PayinsGet, entitiesId: payInId);
+        }
 
         /// <summary>Creates refund for PayIn object.</summary>
         /// <param name="idempotentKey">Idempotent key for this request.</param>
@@ -355,6 +429,23 @@ namespace MangoPay.SDK.Core.APIs
         {
             return await this.CreateObjectAsync<CardPreAuthorizedDepositPayInDTO, CardPreAuthorizedDepositPayInPostDTO>(
                 MethodKey.PayInsCreateCardPreAuthorizedDeposit, payIn, idempotentKey);
+        }
+        
+        /// <summary>Look up metadata from BIN or Google Pay token</summary>
+        /// <param name="metadata">PaymentMethodMetadata object</param>
+        /// <returns>Object returned from API.</returns>
+        public async Task<PaymentMethodMetadataDTO> GetPaymentMethodMetadataAsync(PaymentMethodMetadataPostDTO metadata)
+        {
+            return await this.CreateObjectAsync<PaymentMethodMetadataDTO, PaymentMethodMetadataPostDTO>(MethodKey.GetPaymentMethodMetadata, metadata, null);
+        }
+        
+        /// <summary>Add tracking information to a PayPal PayIn (add the tracking number and carrier for LineItems shipments.)</summary>
+        /// <param name="payInId">PayIn identifier.</param>
+        /// <param name="trackingInformation">The tracking information to be added.</param>
+        /// <returns>The updated PayPal PayIn.</returns>
+        public async Task<PayInPayPalWebDTO> AddPayPalTrackingInformation(string payInId, PayPalTrackingInformationPutDTO trackingInformation)
+        {
+            return await this.UpdateObjectAsync<PayInPayPalWebDTO, PayPalTrackingInformationPutDTO>(MethodKey.PayInsAddTrackingInformation, trackingInformation, null, payInId);
         }
     }
 }

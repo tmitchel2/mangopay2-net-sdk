@@ -1,9 +1,9 @@
-﻿using MangoPay.SDK.Core.Enumerations;
-using MangoPay.SDK.Entities;
-using MangoPay.SDK.Entities.GET;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MangoPay.SDK.Core.Enumerations;
+using MangoPay.SDK.Entities;
+using MangoPay.SDK.Entities.GET;
 
 namespace MangoPay.SDK.Core.APIs
 {
@@ -41,6 +41,7 @@ namespace MangoPay.SDK.Core.APIs
             { MethodKey.CardPreauthorizations, new ApiEndPoint("/cards/{0}/preauthorizations", RequestType.GET)},
             { MethodKey.CardTransactions, new ApiEndPoint("/cards/{0}/transactions", RequestType.GET)},
             { MethodKey.CardValidation, new ApiEndPoint("/cards/{0}/validation", RequestType.POST) },
+            { MethodKey.GetCardValidation, new ApiEndPoint("/cards/{0}/validation/{1}", RequestType.GET) },
 
             { MethodKey.PayinsCardWebCreate, new ApiEndPoint("/payins/card/web", RequestType.POST)},
             { MethodKey.PayinsCardWebGetCardData, new ApiEndPoint("/payins/card/web/{0}/extended/", RequestType.GET)},
@@ -70,14 +71,20 @@ namespace MangoPay.SDK.Core.APIs
             { MethodKey.PayinsSatispayWebCreate, new ApiEndPoint("/payins/payment-methods/satispay", RequestType.POST)},
             { MethodKey.PayinsBlikWebCreate, new ApiEndPoint("/payins/payment-methods/blik", RequestType.POST)},
             { MethodKey.PayinsKlarnaWebCreate, new ApiEndPoint("/payins/payment-methods/klarna", RequestType.POST)},
+            { MethodKey.PayinsIdealWebCreate, new ApiEndPoint("/payins/payment-methods/ideal", RequestType.POST)},
+            { MethodKey.PayinsGiropayWebCreate, new ApiEndPoint("/payins/payment-methods/giropay", RequestType.POST)},
+            { MethodKey.PayinsBancontactWebCreate, new ApiEndPoint("/payins/payment-methods/bancontact", RequestType.POST)},
+            { MethodKey.PayinsSwishWebCreate, new ApiEndPoint("/payins/payment-methods/swish", RequestType.POST)},
             
             { MethodKey.PayinsRecurringRegistration, new ApiEndPoint("/recurringpayinregistrations", RequestType.POST)},
             { MethodKey.PayinsGetRecurringRegistration, new ApiEndPoint("/recurringpayinregistrations/{0}", RequestType.GET)},
             { MethodKey.PayinsPutRecurringRegistration, new ApiEndPoint("/recurringpayinregistrations/{0}", RequestType.PUT)},
-
             { MethodKey.PayinsRecurringCardDirect, new ApiEndPoint("/payins/recurring/card/direct", RequestType.POST) },
             
             { MethodKey.PayInsCreateCardPreAuthorizedDeposit,new ApiEndPoint("/payins/deposit-preauthorized/direct/full-capture",RequestType.POST)},
+            { MethodKey.PayInsAddTrackingInformation,new ApiEndPoint("/payins/{0}/trackings",RequestType.PUT)},
+            
+            { MethodKey.GetPaymentMethodMetadata, new ApiEndPoint("/payment-methods/metadata", RequestType.POST) },
 
             { MethodKey.PayoutsBankwireCreate, new ApiEndPoint("/payouts/bankwire", RequestType.POST)},
             { MethodKey.PayoutsBankwireGet, new ApiEndPoint("/payouts/bankwire/{0}", RequestType.GET)},
@@ -227,9 +234,18 @@ namespace MangoPay.SDK.Core.APIs
             { MethodKey.DepositsGet,new ApiEndPoint("/deposit-preauthorizations/{0}",RequestType.GET)},
             { MethodKey.DepositsCancel,new ApiEndPoint("/deposit-preauthorizations/{0}",RequestType.PUT)},
             
-            { MethodKey.GetConversionRate,new ApiEndPoint("/conversion/rate/{0}/{1}",RequestType.GET)},
-            { MethodKey.CreateInstantConversion,new ApiEndPoint("/instant-conversion",RequestType.POST)},
-            { MethodKey.GetInstantConversion,new ApiEndPoint("/instant-conversion/{0}",RequestType.GET)}
+            { MethodKey.GetConversionRate,new ApiEndPoint("/conversions/rate/{0}/{1}",RequestType.GET)},
+            { MethodKey.CreateInstantConversion,new ApiEndPoint("/conversions/instant-conversion",RequestType.POST)},
+            { MethodKey.CreateQuotedConversion, new ApiEndPoint("/conversions/quoted-conversion", RequestType.POST) },
+            { MethodKey.GetConversion,new ApiEndPoint("/conversions/{0}",RequestType.GET)},
+            { MethodKey.CreateConversionQuote,new ApiEndPoint("/conversions/quote",RequestType.POST)},
+            { MethodKey.GetConversionQuote, new ApiEndPoint("/conversions/quote/{0}", RequestType.GET) },
+            
+            { MethodKey.VirtualAccountCreate, new ApiEndPoint("/wallets/{0}/virtual-accounts", RequestType.POST) },
+            { MethodKey.VirtualAccountDeactivate, new ApiEndPoint("/wallets/{0}/virtual-accounts/{1}", RequestType.PUT) },
+            { MethodKey.VirtualAccountGet, new ApiEndPoint("/wallets/{0}/virtual-accounts/{1}", RequestType.GET) },
+            { MethodKey.VirtualAccountGetAll, new ApiEndPoint("/wallets/{0}/virtual-accounts", RequestType.GET) },
+            { MethodKey.VirtualAccountGetAvailabilities, new ApiEndPoint("/virtual-accounts/availability", RequestType.GET) }
         };
 
         /// <summary>Creates new API instance.</summary>

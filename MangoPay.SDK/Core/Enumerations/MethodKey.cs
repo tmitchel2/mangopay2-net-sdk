@@ -14,6 +14,7 @@ namespace MangoPay.SDK.Core.Enumerations
         CardRegistrationSave,
         CardPreauthorizations,
         CardValidation,
+        GetCardValidation,
         CardTransactions,
         CardByFingerprintGet,
         EventsAll,
@@ -45,6 +46,11 @@ namespace MangoPay.SDK.Core.Enumerations
         PayinsSatispayWebCreate,
         PayinsBlikWebCreate,
         PayinsKlarnaWebCreate,
+        PayinsSwishWebCreate,
+        PayinsIdealWebCreate,
+        PayinsGiropayWebCreate,
+        PayinsBancontactWebCreate,
+        GetPaymentMethodMetadata,
         PayoutsBankwireCreate,
         PayoutsBankwireGet,
         PayoutsGet,
@@ -188,6 +194,16 @@ namespace MangoPay.SDK.Core.Enumerations
 		
 		GetConversionRate,
 		CreateInstantConversion,
-		GetInstantConversion
+		CreateQuotedConversion,
+		GetConversion,
+		CreateConversionQuote,
+		GetConversionQuote,
+		PayInsAddTrackingInformation,
+		
+		VirtualAccountCreate,
+		VirtualAccountGet,
+		VirtualAccountGetAll, 
+		VirtualAccountDeactivate,
+		VirtualAccountGetAvailabilities,
     }
 }

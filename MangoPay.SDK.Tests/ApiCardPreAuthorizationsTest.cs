@@ -7,6 +7,7 @@ using MangoPay.SDK.Entities.PUT;
 using NUnit.Framework;
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MangoPay.SDK.Tests
@@ -63,6 +64,41 @@ namespace MangoPay.SDK.Tests
                 Assert.IsNotNull(cardPreAuthorizationWithBilling.SecurityInfo.AVSResult);
                 Assert.AreEqual(cardPreAuthorizationWithBilling.SecurityInfo.AVSResult, AVSResult.NO_CHECK);
 
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail(ex.Message);
+            }
+        }
+        
+        [Test]
+        public async Task Test_CardPreAuthorization_Create_WithBilling_CheckCardInfo()
+        {
+            try
+            {
+                var john = await GetJohn();
+                var cardPreAuthorization = await GetPreAuthorization(john.Id);
+                var billing = new Billing();
+                var address = new Address
+                {
+                    City = "Test city",
+                    AddressLine1 = "Test address line 1",
+                    AddressLine2 = "Test address line 2",
+                    Country = CountryIso.RO,
+                    PostalCode = "65400"
+                };
+                billing.Address = address;
+                billing.FirstName = "Joe";
+                billing.LastName = "Doe";
+                cardPreAuthorization.Billing = billing;
+
+                var cardPreAuthorizationWithBilling = await this.Api.CardPreAuthorizations.CreateAsync(cardPreAuthorization);
+
+                Assert.IsNotNull(cardPreAuthorizationWithBilling.CardInfo);
+                Assert.IsNotNull(cardPreAuthorizationWithBilling.CardInfo.IssuingBank);
+                Assert.IsNotNull(cardPreAuthorizationWithBilling.CardInfo.Brand);
+                Assert.IsNotNull(cardPreAuthorizationWithBilling.CardInfo.Type);
+                Assert.IsNotNull(cardPreAuthorizationWithBilling.CardInfo.IssuerCountryCode);
             }
             catch (Exception ex)
             {
@@ -143,7 +179,8 @@ namespace MangoPay.SDK.Tests
                 };
 
                 await Api.PayIns.CreatePreauthorizedDirectAsync(payIn);
-
+                
+                Thread.Sleep(2000);
                 var preAuthTransactions = await this.Api.CardPreAuthorizations.GetTransactionsAsync(cardPreAuthorization.Id, new Pagination(1, 10));
 
                 Assert.NotNull(preAuthTransactions);

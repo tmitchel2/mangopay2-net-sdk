@@ -1,3 +1,158 @@
+## [3.22.0] - 2025-02-10
+### Added
+New endpoints for [SWISH PayIn](https://docs.mangopay.com/api-reference/swish/swish-payin-object) object:
+
+- [Create a SWISH PayIn](https://docs.mangopay.com/api-reference/swish/create-swish-payin)
+- [View a PayIn (SWISH)](https://docs.mangopay.com/api-reference/swish/view-payin-swish)
+
+### Fixed
+
+Added a custom deserializer to support the `CardInfo.Type` naming change from `CHARDE_CARD` to `CHARGE CARD`.
+## [3.21.4] - 2025-02-05
+### Updated
+
+Revised tests to improve reliability and address any outdated tests.
+
+## [3.21.3] - 2025-01-30
+### Fixed
+
+Adjust the timeout configuration for `Timeout`.
+## [3.21.2] - 2025-01-27
+### Updated
+
+- Added tests for rate limiting.
+- #232:`CardInfo.Type` field now supports nullable values. Thank you for your contribution @RudyLeetchi!
+
+**Impact**
+
+Please note that if your code assumes `CardInfo.Type` is always non-null, you may need to update your logic to handle null values to prevent potential runtime issues.
+
+## [3.21.1] - 2025-01-14
+### Fixed
+
+- #226: Add `DebitedFunds` and `Fees` parameters for [transfer refunds](https://docs.mangopay.com/api-reference/refunds/create-refund-transfer). Thank you for your contribution [@jeremyTyriaux](https://github.com/jeremyTyriaux)!
+
+## [3.21.0] - 2025-01-10
+### Added
+
+New endpoints for The Virtual Account object:
+
+- Create a Virtual Account
+- Deactivate a Virtual Account
+- View a Virtual Account
+- List Virtual Accounts for a Wallet
+- View Client Availabilities
+
+Added all relevant `EVENT_TYPE_CHOICES`:
+
+- `VIRTUAL_ACCOUNT_ACTIVE`
+- `VIRTUAL_ACCOUNT_BLOCKED`
+- `VIRTUAL_ACCOUNT_CLOSED`
+- `VIRTUAL_ACCOUNT_FAILED`
+
+
+### Added
+
+- New `PaymentRef` parameter for [Payouts](https://docs.mangopay.com/api-reference/payouts/payout-object#the-payout-object)
+
+## [3.19.3] - 2024-11-11
+### Fixed
+
+- #231 Update RestSharp from v107.3.0 to v112.1.0.
+- #225 Add `RateLimitingCallsMade` to `LastRequestInfo`. Thanks for your contribution [@bosquig](https://github.com/bosquig)
+
+## [3.19.2] - 2024-10-14
+### Added
+
+- Added new `PaymentFlow` parameter to the [Bancontact PayIn](https://docs.mangopay.com/api-reference/bancontact/bancontact-payin-object) endpoint.
+
+## [3.19.1] - 2024-07-15
+### Added
+
+- Parameter `StatementDescriptor` for the endpoint [Create refund payin](https://mangopay.com/docs/endpoints/refunds#create-refund-payin)
+- Parameter PaymentCategory for the endpoints : [Create a card validation](https://mangopay.com/docs/endpoints/card-validations#create-card-validation), [Create a direct card payin](https://mangopay.com/docs/endpoints/direct-card-payins#create-direct-card-payin), [Create a preauthorization](https://mangopay.com/docs/endpoints/preauthorizations#create-preauthorization)
+
+## [3.19.0] - 2024-06-20
+### Added
+
+- New endpoint [Bancontact payin](https://mangopay.com/docs/endpoints/bancontact)
+- New parameter for update card : `CardHolderName `
+
+## [3.18.0] - 2024-05-20
+### Added
+
+- New endpoint [Add tracking to Paypal payin](https://mangopay.com/docs/endpoints/paypal#add-tracking-paypal-payin)
+- New parameters for Paypal mean of payment : `CancelURL` & `Category` (sub-parameter of `LineItems`). And management of `PaypalPayerID`, `BuyerCountry`, `BuyerFirstname`, `BuyerLastname`, `BuyerPhone`, `PaypalOrderID` in the response.
+- New parameter `SecureMode` for [Create card validation](https://mangopay.com/docs/endpoints/card-validations#create-card-validation)
+- New parameter `CardHolderName` for [Update Card registration](https://mangopay.com/docs/endpoints/card-validations#update-card-registration)
+
+## [3.17.1] - 2024-04-30
+### Fixed
+
+- Updated the implementation for [Look up metadata for a payment method](https://mangopay.com/docs/endpoints/payment-method-metadata#lookup-payment-method-metadata). The `CommercialIndicator` and `CardType` fields have been moved to the `BinData` object in the API response.
+
+## [3.17.0] - 2024-03-08
+### Fixed
+
+- Fixed incorrect spelling of the `Subtype` key in the `BinData` parameter.
+- Conversions endpoint spelling
+
+### Added
+
+- The optional Fees parameter is now available on instant conversions, allowing platforms to charge users for FX services. More information [here](https://mangopay.com/docs/release-notes/millefeuille).
+- Platforms can now use a quote to secure the rate for a conversion between two currencies for a set amount of time. More information [here](https://mangopay.com/docs/release-notes/millefeuille).
+- Introduced the `UKHeaderFlag` boolean configuration key. Platforms partnered with Mangopay's UK entity should set this key to true for proper configuration.
+
+## [3.16.0] - 2024-02-13
+### Added
+
+- New endpoint to look up metadata from BIN or Google Pay token. More information [here](https://mangopay.com/docs/release-notes/kisale)
+- [Get a card validation endpoint](https://mangopay.com/docs/endpoints/card-validations#view-card-validation)
+
+## [3.15.0] - 2023-12-22
+### Added
+
+New `CardInfo` parameter returned on card transactions. More information [here](https://mangopay.com/docs/release-notes/chilka).
+
+## [3.14.0] - 2023-12-07
+### Added
+
+The IDEAL legacy implementation has been enhanced. You can now pass the `Bic`., and if provided, the API response will include the `BankName` parameter. More information [here](https://mangopay.com/docs/endpoints/web-card-payins#create-web-card-payin).
+
+## [3.13.2] - 2023-11-09
+### Added
+
+It's now possible to specify an amount for DebitedFunds and Fees when you create a refund.
+
+## [3.13.1] - 2023-11-06
+### Fixed
+
+- Missing parameter for Klarna
+
+## [3.13.0] - 2023-11-02
+### Updated
+
+- Giropay and Ideal integrations with Mangopay have been improved. Some methods have been deprecated.
+
+### Added
+- New Reference parameter for the new Paypal implementation. Some methods have been deprecated.
+- New hooks event :
+  DEPOSIT_PREAUTHORIZATION_PAYMENT_NO_SHOW_REQUESTED
+  DEPOSIT_PREAUTHORIZATION_PAYMENT_NO_SHOW
+  DEPOSIT_PREAUTHORIZATION_PAYMENT_TO_BE_COMPLETED
+  DEPOSIT_PREAUTHORIZATION_PAYMENT_FAILED
+
+## [3.12.2] - 2023-10-20
+### Fixed
+- fixed previous release (3.12.1)
+
+## [3.12.1] - 2023-10-19
+### Fixed
+
+Two events types added to reflect changes in the API :
+- LEGAL_COMPANY_NUMBER_VALIDATION_SUCCEEDED
+- LEGAL_COMPANY_NUMBER_VALIDATION_FAILED
+
 ## [3.12.0] - 2023-09-29
 ### Added
 - Instantly convert funds between 2 wallets of different currencies owned by the same user with the new SPOT FX endpoints

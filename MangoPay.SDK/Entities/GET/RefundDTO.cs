@@ -61,5 +61,13 @@ namespace MangoPay.SDK.Entities.GET
 
 		/// <summary>Contains info about the reason for refund.</summary>
 		public RefundReason RefundReason { get; set; }
+        
+        public string Reference { get; set; }
+        
+        /// <summary>
+        /// Custom description to appear on the user’s bank statement along with the platform name.
+        /// Note that a particular bank may show more or less information.
+        /// </summary>
+        public string StatementDescriptor { get; set; }
     }
 }

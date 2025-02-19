@@ -1,14 +1,17 @@
-using MangoPay.SDK.Core;
-using MangoPay.SDK.Core.Enumerations;
-using MangoPay.SDK.Entities;
-using MangoPay.SDK.Entities.GET;
-using MangoPay.SDK.Entities.POST;
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using MangoPay.SDK.Core;
+using MangoPay.SDK.Core.Enumerations;
+using MangoPay.SDK.Core.Serializers;
+using MangoPay.SDK.Entities;
+using MangoPay.SDK.Entities.GET;
+using MangoPay.SDK.Entities.POST;
 using MangoPay.SDK.Entities.PUT;
+using Newtonsoft.Json;
+using NUnit.Framework;
 
 namespace MangoPay.SDK.Tests
 {
@@ -120,7 +123,8 @@ namespace MangoPay.SDK.Tests
                     },
                     "test",
                     // CultureCode.FR
-                    shippingPreference: ShippingPreference.SET_PROVIDED_ADDRESS
+                    shippingPreference: ShippingPreference.SET_PROVIDED_ADDRESS,
+                    reference: "Reference"
                 );
                 
                 var payIn = await this.Api.PayIns.CreatePayPalWebAsync(payInPost);
@@ -242,6 +246,52 @@ namespace MangoPay.SDK.Tests
                 Assert.IsTrue(wallet.Balance.Amount == beforeWallet.Balance.Amount + payIn.CreditedFunds.Amount);
                 Assert.AreEqual(TransactionStatus.SUCCEEDED, payIn.Status);
                 Assert.AreEqual(TransactionType.PAYIN, payIn.Type);
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail(ex.Message);
+            }
+        }
+        
+        [Test]
+        public async Task Test_PayIns_CardDirect_GetPaymentMethodMetadata()
+        {
+            try
+            {
+                var payIn = await this.GetNewPayInCardDirect();
+
+                var metadata = new PaymentMethodMetadataPostDTO
+                {
+                    Type = "BIN",
+                    Bin = payIn.CardInfo.BIN
+                };
+                
+                var resultMetadata = await this.Api.PayIns.GetPaymentMethodMetadataAsync(metadata);
+                
+                Assert.IsNotNull(resultMetadata);
+                Assert.IsNotNull(resultMetadata.IssuerCountryCode);
+                Assert.IsNotNull(resultMetadata.IssuingBank);
+                Assert.IsNotNull(resultMetadata.BinData);
+                Assert.IsNotNull(resultMetadata.BinData[0].CardType);
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail(ex.Message);
+            }
+        }
+        
+        [Test]
+        public async Task Test_PayIns_Create_CardDirect_CheckCardInfo()
+        {
+            try
+            {
+                var payIn = await this.GetNewPayInCardDirect();
+
+                Assert.IsNotNull(payIn.CardInfo);
+                Assert.IsNotNull(payIn.CardInfo.IssuingBank);
+                Assert.IsNotNull(payIn.CardInfo.Brand);
+                Assert.IsNotNull(payIn.CardInfo.Type);
+                Assert.IsNotNull(payIn.CardInfo.IssuerCountryCode);
             }
             catch (Exception ex)
             {
@@ -393,6 +443,145 @@ namespace MangoPay.SDK.Tests
                 Assert.Fail(ex.Message);
             }
         }
+        
+        [Test]
+        public async Task Test_PayIns_Create_IdealWeb()
+        {
+            try
+            {
+                var user = await GetJohn();
+                var payIn = await GetNewPayInIdealWeb();
+                var fetched = await Api.PayIns.GetIdealAsync(payIn.Id);
+
+                Assert.IsTrue(payIn.Id.Length > 0);
+                Assert.AreEqual(PayInPaymentType.IDEAL, payIn.PaymentType);
+                Assert.AreEqual(PayInExecutionType.WEB, payIn.ExecutionType);
+                Assert.IsTrue(payIn.DebitedFunds is Money);
+                Assert.IsTrue(payIn.CreditedFunds is Money);
+                Assert.IsTrue(payIn.Fees is Money);
+                Assert.AreEqual(user.Id, payIn.AuthorId);
+                Assert.AreEqual(TransactionStatus.CREATED, payIn.Status);
+                Assert.AreEqual(TransactionType.PAYIN, payIn.Type);
+                Assert.AreEqual(TransactionNature.REGULAR, payIn.Nature);
+                
+                Assert.AreEqual(payIn.Id, fetched.Id);
+                Assert.IsNotNull(fetched.Id);
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail(ex.Message);
+            }
+        }
+        
+        [Test]
+        public async Task Test_PayIns_Create_GiropayWeb()
+        {
+            try
+            {
+                var user = await GetJohn();
+                var payIn = await GetNewPayInGiropayWeb();
+                var fetched = await Api.PayIns.GetGiropayAsync(payIn.Id);
+
+                Assert.IsTrue(payIn.Id.Length > 0);
+                Assert.AreEqual(PayInPaymentType.GIROPAY, payIn.PaymentType);
+                Assert.AreEqual(PayInExecutionType.WEB, payIn.ExecutionType);
+                Assert.IsTrue(payIn.DebitedFunds is Money);
+                Assert.IsTrue(payIn.CreditedFunds is Money);
+                Assert.IsTrue(payIn.Fees is Money);
+                Assert.AreEqual(user.Id, payIn.AuthorId);
+                Assert.AreEqual(TransactionStatus.CREATED, payIn.Status);
+                Assert.AreEqual(TransactionType.PAYIN, payIn.Type);
+                Assert.AreEqual(TransactionNature.REGULAR, payIn.Nature);
+                
+                Assert.AreEqual(payIn.Id, fetched.Id);
+                Assert.IsNotNull(fetched.Id);
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail(ex.Message);
+            }
+        }
+        
+        [Test]
+        public async Task Test_PayIns_Create_SwishWeb()
+        {
+            try
+            {
+                var user = await GetJohn();
+                var payIn = await GetNewPayInSwishWeb();
+                var fetched = await Api.PayIns.GetSwishAsync(payIn.Id);
+
+                Assert.IsTrue(payIn.Id.Length > 0);
+                Assert.AreEqual(PayInPaymentType.SWISH, payIn.PaymentType);
+                Assert.AreEqual(PayInExecutionType.WEB, payIn.ExecutionType);
+                Assert.IsTrue(payIn.DebitedFunds is Money);
+                Assert.IsTrue(payIn.CreditedFunds is Money);
+                Assert.IsTrue(payIn.Fees is Money);
+                Assert.AreEqual(user.Id, payIn.AuthorId);
+                Assert.AreEqual(TransactionStatus.CREATED, payIn.Status);
+                Assert.AreEqual(TransactionType.PAYIN, payIn.Type);
+                Assert.AreEqual(TransactionNature.REGULAR, payIn.Nature);
+                
+                Assert.AreEqual(payIn.Id, fetched.Id);
+                Assert.IsNotNull(fetched.Id);
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail(ex.Message);
+            }
+        }
+        
+        [Test]
+        public async Task Test_PayIns_Create_BancontactWeb()
+        {
+            try
+            {
+                var user = await GetJohn();
+                var payIn = await GetNewPayInBancontactWeb();
+                var fetched = await Api.PayIns.GetBancontactAsync(payIn.Id);
+
+                Assert.IsTrue(payIn.Id.Length > 0);
+                Assert.AreEqual(PayInPaymentType.BCMC, payIn.PaymentType);
+                Assert.AreEqual(PayInExecutionType.WEB, payIn.ExecutionType);
+                Assert.IsTrue(payIn.DebitedFunds is Money);
+                Assert.IsTrue(payIn.CreditedFunds is Money);
+                Assert.IsTrue(payIn.Fees is Money);
+                Assert.AreEqual(user.Id, payIn.AuthorId);
+                Assert.AreEqual(TransactionStatus.CREATED, payIn.Status);
+                Assert.AreEqual(TransactionType.PAYIN, payIn.Type);
+                Assert.AreEqual(TransactionNature.REGULAR, payIn.Nature);
+                
+                Assert.AreEqual(payIn.Id, fetched.Id);
+                Assert.IsNotNull(fetched.Id);
+                Assert.AreEqual(CultureCode.NL, fetched.Culture);
+                Assert.AreEqual(false, fetched.Recurring);
+                Assert.AreEqual(PaymentFlow.APP, payIn.PaymentFlow);
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail(ex.Message);
+            }
+        }
+        
+        [Test]
+        public async Task Test_PayIns_Create_Legacy_IdealWeb()
+        {
+            var john = await GetJohn();
+
+            var wallet = await CreateJohnsWallet();
+            PayInCardWebDTO payIn = await CreateLegacyIdealPayInCardWeb(wallet.Id);
+            
+            Assert.IsNotNull(payIn.BankName);
+            Assert.IsTrue(payIn.Id.Length > 0);
+            Assert.AreEqual(PayInPaymentType.CARD, payIn.PaymentType);
+            Assert.AreEqual(PayInExecutionType.WEB, payIn.ExecutionType);
+            Assert.IsTrue(payIn.DebitedFunds is Money);
+            Assert.IsTrue(payIn.CreditedFunds is Money);
+            Assert.IsTrue(payIn.Fees is Money);
+            Assert.AreEqual(TransactionStatus.CREATED, payIn.Status);
+            Assert.AreEqual(TransactionType.PAYIN, payIn.Type);
+            Assert.AreEqual(TransactionNature.REGULAR, payIn.Nature);
+        }
 
         [Test]
         public async Task Test_Payins_CardDirect_Create_WithBilling()
@@ -462,6 +651,29 @@ namespace MangoPay.SDK.Tests
                 Assert.IsTrue(refund.Id.Length > 0);
                 Assert.IsTrue(refund.DebitedFunds.Amount == payIn.DebitedFunds.Amount);
                 Assert.IsTrue(walletBefore.Balance.Amount == (walletAfter.Balance.Amount + payIn.DebitedFunds.Amount));
+                Assert.AreEqual(TransactionType.PAYOUT, refund.Type);
+                Assert.AreEqual(TransactionNature.REFUND, refund.Nature);
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail(ex.Message);
+            }
+        }
+        
+        [Test]
+        public async Task Test_PayIns_CreatePartialRefund_CardDirect()
+        {
+            try
+            {
+                var payIn = await this.GetNewPayInCardDirect();
+                var wallet = await this.GetJohnsWalletWithMoney();
+                var walletBefore = await this.Api.Wallets.GetAsync(wallet.Id);
+
+                var refund = await this.GetPartialRefundForPayIn(payIn);
+                var walletAfter = await this.Api.Wallets.GetAsync(wallet.Id);
+
+                Assert.IsTrue(refund.Id.Length > 0);
+                Assert.IsTrue(walletAfter.Balance.Amount == (walletBefore.Balance.Amount - refund.DebitedFunds.Amount));
                 Assert.AreEqual(TransactionType.PAYOUT, refund.Type);
                 Assert.AreEqual(TransactionNature.REFUND, refund.Nature);
             }
@@ -665,7 +877,6 @@ namespace MangoPay.SDK.Tests
 
             Assert.IsNotNull(createPayIn.ReturnURL);
             Assert.IsNotNull(createPayIn.RedirectURL);
-            Assert.IsNotNull(createPayIn.TemplateURL);
 
 
             var getPayIn = await this.Api.PayIns.GetDirectDebitAsync(createPayIn.Id);
@@ -767,7 +978,7 @@ namespace MangoPay.SDK.Tests
             Assert.AreEqual(getPayIn.Status, TransactionStatus.SUCCEEDED);
         }
 
-        [Test]
+        [Ignore("Cannot test Google Pay because the necessary data cannot be generated in the test")]
         public async Task Test_PayIns_Create_GooglePayDirect()
         {
             try
@@ -863,6 +1074,7 @@ namespace MangoPay.SDK.Tests
         }
 
         [Test]
+        [Ignore("Expire payin id")]
         public async Task Test_PayIns_Get_PayPal_WithPayPalBuyerAccountEmail()
         {
             try
@@ -931,7 +1143,7 @@ namespace MangoPay.SDK.Tests
         {
             try
             {
-                var payInId = "74980101";
+                var payInId = "payin_m_01JK6199ED4VGBP98ABRJVDS9D";
 
                 var payIn = await this.Api.PayIns.GetAsync(payInId);
 
@@ -950,6 +1162,7 @@ namespace MangoPay.SDK.Tests
         }
 
         [Test]
+        [Ignore("Expire payin id")]
         public async Task Test_PayIns_GetBankWireExternalInstructionAccountNumber()
         {
             try
@@ -1423,6 +1636,7 @@ namespace MangoPay.SDK.Tests
                     }
                 };
 
+                Thread.Sleep(2000);
                 var createdPayInRegistration = await this.Api.PayIns.CreateRecurringPayInRegistration(payInPost);
 
                 Assert.NotNull(createdPayInRegistration);
@@ -1463,6 +1677,7 @@ namespace MangoPay.SDK.Tests
                     }
                 };
 
+                Thread.Sleep(2000);
                 var createdCit = await this.Api.PayIns.CreateRecurringPayInRegistrationCIT(cit);
 
                 Assert.NotNull(createdCit);
@@ -1651,5 +1866,206 @@ namespace MangoPay.SDK.Tests
                 Assert.Fail(ex.Message);
             }
         }*/
+        
+        
+         [Test]
+        public async Task Test_PayIns_Create_Recurring_MIT_CheckCardInfo()
+        {
+            try
+            {
+                var data = await GetNewJohnsWalletWithMoneyAndCardId(1000);
+                var cardId = data.Item1;
+                var wallet = data.Item2;
+                var userId = wallet.Owners.FirstOrDefault();
+
+                var payInPost = new RecurringPayInRegistrationPostDTO
+                {
+                    AuthorId = userId,
+                    CardId = cardId,
+                    CreditedUserId = userId,
+                    CreditedWalletId = wallet.Id,
+                    FirstTransactionDebitedFunds = new Money
+                    {
+                        Amount = 12,
+                        Currency = CurrencyIso.EUR
+                    },
+                    FirstTransactionFees = new Money
+                    {
+                        Amount = 1,
+                        Currency = CurrencyIso.EUR
+                    },
+                    Billing = new Billing
+                    {
+                        FirstName = "Joe",
+                        LastName = "Blogs",
+                        Address = new Address
+                        {
+                            AddressLine1 = "1 MangoPay Street",
+                            AddressLine2 = "The Loop",
+                            City = "Paris",
+                            Region = "Ile de France",
+                            PostalCode = "75001",
+                            Country = CountryIso.FR
+                        }
+                    },
+                    Shipping = new Shipping
+                    {
+                        FirstName = "Joe",
+                        LastName = "Blogs",
+                        Address = new Address
+                        {
+                            AddressLine1 = "1 MangoPay Street",
+                            AddressLine2 = "The Loop",
+                            City = "Paris",
+                            Region = "Ile de France",
+                            PostalCode = "75001",
+                            Country = CountryIso.FR
+                        }
+                    },
+                    EndDate = DateTime.Now.AddDays(365),
+                    Migration = true,
+                    NextTransactionDebitedFunds = new Money
+                    {
+                        Amount = 12,
+                        Currency = CurrencyIso.EUR
+                    },
+                    NextTransactionFees = new Money
+                    {
+                        Amount = 1,
+                        Currency = CurrencyIso.EUR
+                    },
+                    Frequency = "Daily",
+                    FixedNextAmount = true,
+                    FractionedPayment = false
+                };
+
+                var createdPayInRegistration = await this.Api.PayIns.CreateRecurringPayInRegistration(payInPost);
+
+                Assert.NotNull(createdPayInRegistration);
+                Assert.IsTrue(userId == createdPayInRegistration.CreditedUserId);
+                Assert.IsTrue(cardId == createdPayInRegistration.CardId);
+                Assert.IsTrue(wallet.Id == createdPayInRegistration.CreditedWalletId);
+                Assert.NotNull(createdPayInRegistration.Shipping);
+                Assert.NotNull(createdPayInRegistration.Billing);
+
+                var cit = new RecurringPayInCITPostDTO
+                {
+                    RecurringPayinRegistrationId = createdPayInRegistration.Id,
+                    BrowserInfo = new BrowserInfo
+                    {
+                        AcceptHeader = "text/html, application/xhtml+xml, application/xml;q=0.9, /;q=0.8",
+                        JavaEnabled = true,
+                        Language = "FR-FR",
+                        ColorDepth = 4,
+                        ScreenHeight = 1800,
+                        ScreenWidth = 400,
+                        JavascriptEnabled = true,
+                        TimeZoneOffset = "+60",
+                        UserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 13_6_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148"
+                    },
+                    IpAddress = "2001:0620:0000:0000:0211:24FF:FE80:C12C",
+                    SecureModeReturnURL = "http://www.my-site.com/returnURL",
+                    StatementDescriptor = "lorem",
+                    Tag = "custom meta",
+                    DebitedFunds = new Money
+                    {
+                        Amount = 12,
+                        Currency = CurrencyIso.EUR
+                    },
+                    Fees = new Money
+                    {
+                        Amount = 1,
+                        Currency = CurrencyIso.EUR
+                    }
+                };
+
+                var createdCit = await this.Api.PayIns.CreateRecurringPayInRegistrationCIT(cit);
+
+                Assert.IsNotNull(createdCit.CardInfo);
+                Assert.IsNotNull(createdCit.CardInfo.IssuingBank);
+                Assert.IsNotNull(createdCit.CardInfo.Brand);
+                Assert.IsNotNull(createdCit.CardInfo.Type);
+                Assert.IsNotNull(createdCit.CardInfo.IssuerCountryCode);
+
+                var mit = new RecurringPayInMITPostDTO
+                {
+                    RecurringPayinRegistrationId = createdPayInRegistration.Id,
+                    StatementDescriptor = "lorem",
+                    Tag = "custom meta",
+                    DebitedFunds = new Money
+                    {
+                        Amount = 10,
+                        Currency = CurrencyIso.EUR
+                    },
+                    Fees = new Money
+                    {
+                        Amount = 1,
+                        Currency = CurrencyIso.EUR
+                    }
+                };
+
+                var createdMit = await this.Api.PayIns.CreateRecurringPayInRegistrationMIT(mit);
+
+                Assert.IsNotNull(createdMit.CardInfo);
+                Assert.IsNotNull(createdMit.CardInfo.IssuingBank);
+                Assert.IsNotNull(createdMit.CardInfo.Brand);
+                Assert.IsNotNull(createdMit.CardInfo.Type);
+                Assert.IsNotNull(createdMit.CardInfo.IssuerCountryCode);
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail(ex.Message);
+            }
+        }
+
+        [Test]
+        public async Task Test_Serialize_CardInfo()
+        {
+            var settings = new JsonSerializerSettings
+            {
+                Converters = { new CardInfoTypeConverter() }
+            };
+
+            var cardInfo = new CardInfo();
+            cardInfo.Type = null;
+            
+            var payIn = new PayInCardDirectDTO();
+            payIn.CardInfo = cardInfo;
+            
+            string json = JsonConvert.SerializeObject(payIn, settings);
+            Assert.IsTrue(json.Contains("\"Type\":null"));
+
+            cardInfo.Type = CardInfoType.CREDIT;
+            json = JsonConvert.SerializeObject(payIn, settings);
+            Assert.IsTrue(json.Contains("\"Type\":\"CREDIT\""));
+            
+            cardInfo.Type = CardInfoType.CHARGE_CARD;
+            json = JsonConvert.SerializeObject(payIn, settings);
+            Assert.IsTrue(json.Contains("\"Type\":\"CHARGE CARD\""));
+        }
+        
+        [Test]
+        public async Task Test_Dserialize_CardInfo()
+        {
+            var settings = new JsonSerializerSettings
+            {
+                Converters = { new CardInfoTypeConverter() }
+            };
+
+            string json =
+                "{\"CardInfo\":{\"BIN\":null,\"IssuingBank\":null,\"IssuerCountryCode\":0,\"Type\":null,\"Brand\":null,\"SubType\":null}}";
+            var deserialized = JsonConvert.DeserializeObject<PayInCardDirectDTO>(json, settings);
+            Assert.AreEqual(null, deserialized.CardInfo.Type);
+            
+            json =
+                "{\"CardInfo\":{\"BIN\":null,\"IssuingBank\":null,\"IssuerCountryCode\":0,\"Type\":\"DEBIT\",\"Brand\":null,\"SubType\":null}}";
+            deserialized = JsonConvert.DeserializeObject<PayInCardDirectDTO>(json, settings);
+            Assert.AreEqual(CardInfoType.DEBIT, deserialized.CardInfo.Type);
+            
+            json =
+                "{\"CardInfo\":{\"BIN\":null,\"IssuingBank\":null,\"IssuerCountryCode\":0,\"Type\":\"CHARGE_CARD\",\"Brand\":null,\"SubType\":null}}";
+            deserialized = JsonConvert.DeserializeObject<PayInCardDirectDTO>(json, settings);
+            Assert.AreEqual(CardInfoType.CHARGE_CARD, deserialized.CardInfo.Type);
+        }
     }
 }
